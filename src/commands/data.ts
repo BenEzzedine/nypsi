@@ -139,7 +139,7 @@ async function run(
 
       await m.edit({ embeds: [embed], components: [] });
 
-      logger.info(`fetching data for ${message.author.username}...`);
+      logger.info(`fetching data for ${message.author.username}... ${message.author.id}`);
 
       const data = {
         data: `nypsi data for ${message.author.id} (${message.author.username}) at ${dayjs().format(
@@ -152,6 +152,7 @@ async function run(
           include: {
             Economy: {
               include: {
+                Task: true,
                 Inventory: true,
                 Boosters: true,
                 Game: true,
@@ -242,6 +243,8 @@ async function run(
       let gzipped: Buffer;
 
       if (buffer.byteLength > 7e6) gzipped = await promisify(gzip)(buffer);
+
+      logger.info("data fetched");
 
       let fail = false;
       await message.member

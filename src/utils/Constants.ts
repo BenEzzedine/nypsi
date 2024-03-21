@@ -77,6 +77,7 @@ export default {
         EXISTS: "cache:chatreaction:exists",
       },
       economy: {
+        TASKS: "cache:economy:tasks",
         AUTO_SELL: "cache:economy:autosell",
         AUCTION_AVG: "cache:economy:auctionavg",
         OFFER_AVG: "cache:economy:offeravg",
@@ -109,6 +110,7 @@ export default {
       MENTION_DM_TEKOH_THRESHOLD: "nypsi:mention:warn",
       CAPTCHA_VERIFIED: "nypsi:captcha_verified",
       DM_QUEUE: "nypsi:dmqueue",
+      INLINE_QUEUE: "nypsi:inlinequeue",
       GEM_GIVEN: "nypsi:gemgiven",
       GUILD_LOG_QUEUE: "nypsi:guild:logs:queue",
       HOURLY_DB_REPORT: "nypsi:hourlydbreport",
@@ -181,4 +183,5 @@ export default {
   BADGES: ["owner", "staff", "highroller", "contributor", "season_winner", "og"],
   PURPLE: "#8b5cf6" as ColorResolvable,
   HIGHROLLER_ROLE: "1067122363143032992",
+  HIGHEROLLER_REQUIREMENT: 500,
 } as const;

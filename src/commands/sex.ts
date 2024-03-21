@@ -13,6 +13,7 @@ import { CustomEmbed, ErrorEmbed } from "../models/EmbedBuilders";
 import Constants from "../utils/Constants.js";
 import { MStoTime } from "../utils/functions/date.js";
 import { addProgress } from "../utils/functions/economy/achievements.js";
+import { addTaskProgress } from "../utils/functions/economy/tasks.js";
 import { getTagsData } from "../utils/functions/economy/utils.js";
 import { cleanString } from "../utils/functions/string.js";
 import { addNotificationToQueue, getDmSettings } from "../utils/functions/users/notifications.js";
@@ -196,8 +197,8 @@ async function run(
             : milf.guildName
         }**\n\n` +
           `go ahead and send [**${
-            tag ? `[${getTagsData()[tag.tagId].emoji}]` : ""
-          }${await getLastKnownUsername(milf.userId)}**](https://discord.com/users/${
+            tag ? `[${getTagsData()[tag.tagId].emoji}] ` : ""
+          }${await getLastKnownUsername(milf.userId)}**](https://nypsi.xyz/user/${
             milf.userId
           }) a *private* message 😉😏`,
       ).setHeader("milf finder");
@@ -209,9 +210,9 @@ async function run(
               ? "[nypsi](https://discord.gg/hJTDNST)"
               : milf.guildName
           }**\n\n` +
-            `[**${tag ? `[${getTagsData()[tag.tagId].emoji}]` : ""}${await getLastKnownUsername(
+            `[**${tag ? `[${getTagsData()[tag.tagId].emoji}] ` : ""}${await getLastKnownUsername(
               milf.userId,
-            )}**](https://discord.com/users/${milf.userId}) - ${milf.description}\n\n` +
+            )}**](https://nypsi.xyz/user/${milf.userId}) - ${milf.description}\n\n` +
             "go ahead and send them a *private* message 😉😏",
         );
       }
@@ -220,6 +221,8 @@ async function run(
         send({ embeds: [embed] }),
         addProgress(message.author.id, "whore", 1),
         addProgress(milf.userId, "whore", 1),
+        addTaskProgress(message.author.id, "horny"),
+        addTaskProgress(milf.userId, "horny"),
       ]);
 
       const authorTag = await getActiveTag(message.author.id);
@@ -231,8 +234,8 @@ async function run(
             ? "[nypsi](https://discord.gg/hJTDNST)"
             : message.guild.name
         }**\n\ngo ahead and send [${
-          authorTag ? `[${getTagsData()[authorTag.tagId].emoji}]` : ""
-        }**${message.author.username}**](https://discord.com/users/${
+          authorTag ? `[${getTagsData()[authorTag.tagId].emoji}] ` : ""
+        }**${message.author.username}**](https://nypsi.xyz/user/${
           message.author.id
         }) a *private* message 😉😏`,
       )
@@ -263,9 +266,9 @@ async function run(
               ? "[nypsi](https://discord.gg/hJTDNST)"
               : message.guild.name
           }**\n\n` +
-            `[${authorTag ? `[${getTagsData()[authorTag.tagId].emoji}]` : ""}**${
+            `[${authorTag ? `[${getTagsData()[authorTag.tagId].emoji}] ` : ""}**${
               message.author.username
-            }**](https://discord.com/users/${message.author.id}) - ${description}\n\n` +
+            }**](https://nypsi.xyz/user/${message.author.id}) - ${description}\n\n` +
             "go ahead and send them a *private* message 😉😏",
         );
       }

@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {
@@ -38,6 +39,7 @@ model User {
   Tags           Tags[]
   Views          ProfileView[]
   Viewed         ProfileView[]    @relation(name: "viewer")
+  Sessions       Session[]
 }
 
 model ProfileView {
@@ -82,7 +84,6 @@ model Leaderboards {
 
   @@unique([leaderboard, position])
   @@unique([userId, leaderboard])
-  @@index([userId])
 }
 
 model DMSettings {
@@ -92,7 +93,6 @@ model DMSettings {
   lottery        Boolean         @default(true)
   premium        Boolean         @default(true)
   auction        Boolean         @default(true)
-  vote           Boolean         @default(true)
   voteReminder   Boolean         @default(false)
   worker         WorkerDmSetting @default(OnlyWhenFull)
   booster        Boolean         @default(false)
@@ -135,7 +135,8 @@ model CommandUse {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, command])
+  @@id([userId, command])
+  @@index([userId])
 }
 
 model Achievements {
@@ -148,6 +149,7 @@ model Achievements {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, achievementId])
+  @@index([userId])
 }
 
 model Economy {
@@ -167,9 +169,11 @@ model Economy {
   lastVote  DateTime @default("1970-01-01T14:21:00+02:00")
   lastBake  DateTime @default("1970-01-01T14:21:00+02:00")
 
-  monthVote   Int @default(0)
-  seasonVote  Int @default(0)
-  dailyStreak Int @default(0)
+  monthVote        Int @default(0)
+  seasonVote       Int @default(0)
+  dailyStreak      Int @default(0)
+  dailyTaskStreak  Int @default(0)
+  weeklyTaskStreak Int @default(0)
 
   banned DateTime?
 
@@ -194,6 +198,26 @@ model Economy {
   OffersReceived     Offer[]             @relation(name: "target")
   OffersGiven        Offer[]             @relation(name: "owner")
   Upgrades           Upgrades[]
+  Task               Task[]
+}
+
+model Task {
+  user_id   String
+  task_id   String
+  progress  BigInt   @default(0)
+  target    BigInt
+  completed Boolean  @default(false)
+  prize     String
+  type      TaskType
+
+  economy Economy @relation(fields: [user_id], references: [userId], onDelete: Cascade)
+
+  @@id([user_id, task_id])
+}
+
+enum TaskType {
+  daily
+  weekly
 }
 
 model Upgrades {
@@ -244,7 +268,7 @@ model Inventory {
 
   economy Economy @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
-  @@unique([userId, item])
+  @@id([userId, item])
   @@index([userId])
 }
 
@@ -607,7 +631,7 @@ model EconomyGuild {
   xp        BigInt   @default(0)
   tokens    Int      @default(0)
   level     Int      @default(1)
-  motd      String   @default("welcome to the guild fool (/guild motd)")
+  motd      String   @default("/guild motd")
 
   owner   Economy @relation(fields: [ownerId], references: [userId], onDelete: Cascade)
   ownerId String  @unique
@@ -724,4 +748,11 @@ enum ImageType {
   dog
   capybara
   wholesome
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  user      User     @relation(references: [id], fields: [userId], onDelete: Cascade)
 }

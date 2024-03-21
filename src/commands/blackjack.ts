@@ -1,4 +1,4 @@
-import { variants } from "@catppuccin/palette";
+import { flavors } from "@catppuccin/palette";
 import {
   ActionRowBuilder,
   BaseMessageOptions,
@@ -47,6 +47,7 @@ import { recentCommands } from "../utils/functions/users/commands";
 import { addHourlyCommand } from "../utils/handlers/commandhandler";
 import { addCooldown, getResponse, onCooldown } from "../utils/handlers/cooldownhandler.js";
 import { gamble, logger } from "../utils/logger";
+import { addTaskProgress } from "../utils/functions/economy/tasks";
 
 const cmd = new Command("blackjack", "play blackjack", "money").setAliases(["bj", "blowjob"]);
 
@@ -414,7 +415,8 @@ class Game {
 
     if (state === "win") embed.setColor(Constants.EMBED_SUCCESS_COLOR);
     else if (state === "lose") embed.setColor(Constants.EMBED_FAIL_COLOR);
-    else if (state === "draw") embed.setColor(variants.macchiato.yellow.hex as ColorResolvable);
+    else if (state === "draw")
+      embed.setColor(flavors.macchiato.colors.yellow.hex as ColorResolvable);
 
     if (xp && id) embed.setFooter({ text: `+${xp.toLocaleString()}xp | id: ${id}` });
     else if (id) embed.setFooter({ text: `id: ${id}` });
@@ -439,6 +441,7 @@ class Game {
       if (this.hand.cards.length === 2 && this.hand.total() === 21) {
         winnings = this.bet * 2.5;
         addProgress(this.member.user.id, "blackjack_pro", 1);
+        addTaskProgress(this.member.user.id, "blackjack");
       }
 
       winnings = winnings + Math.floor(winnings * multi.multi);

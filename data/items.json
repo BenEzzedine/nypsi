@@ -404,7 +404,7 @@
     "longDesc": "allows you to mine",
     "aliases": ["diamondpick", "dpick"],
     "role": "tool",
-    "rarity": 2,
+    "rarity": 3,
     "buy": 0,
     "sell": 10000,
     "in_crates": true,
@@ -447,7 +447,7 @@
     "longDesc": "allows you to fish with amazing luck",
     "aliases": ["ifishing", "ifish"],
     "role": "tool",
-    "rarity": 2,
+    "rarity": 3,
     "buy": 0,
     "sell": 10000,
     "in_crates": true,
@@ -513,7 +513,7 @@
     "longDesc": "allows you to hunt with amazing luck",
     "aliases": ["igun", "ak47"],
     "role": "tool",
-    "rarity": 2,
+    "rarity": 3,
     "buy": 0,
     "sell": 10000,
     "in_crates": true,
@@ -873,6 +873,7 @@
       "id:incredible_fishing_rod:50",
       "id:cursor:65",
       "id:grandma:65",
+      "id:lamborghini:5",
       "id:orphan:50",
       "id:big_tiddy_goth_gf:75",
       "id:viagra:30",
@@ -2141,6 +2142,8 @@
       "id:cursor:70",
       "id:super_cursor:50",
       "id:oven:30",
+      "id:lamborghini:1",
+      "id:mini_cooper:60",
       "id:diamond_pickaxe:50",
       "id:iron_pickaxe:75",
       "id:incredible_fishing_rod:50",
@@ -2182,6 +2185,7 @@
       "id:lucky_7:80",
       "id:incredible_fishing_rod",
       "id:incredible_gun",
+      "id:lamborghini:45",
       "id:quarry_scrap",
       "id:nypsi_crate:50",
       "id:platinum_credit:0.5",
@@ -2280,7 +2284,9 @@
       "id:boosters_crate:3",
       "id:bronze_credit:0.1",
       "id:purple_gem:0.1",
-      "id:quarry_scrap:3"
+      "id:quarry_scrap:3",
+      "id:big_tiddy_goth_gf:20",
+      "id:69420_crate:40"
     ]
   },
   "bob": {
@@ -2433,7 +2439,7 @@
     "aliases": ["cheese"],
     "emoji": "🧀",
     "longDesc": "increase your sell multiplier by 5% for 30 minutes (stacks to 10)",
-    "rarity": 4,
+    "rarity": 5,
     "buy": 0,
     "sell": 100000,
     "role": "booster",
@@ -2501,7 +2507,7 @@
     "random_drop_chance": 0.1,
     "items": [
       "id:infinity_tag:70",
-      "id:unbreaking",
+      "id:unbreaking:90",
       "id:highroller",
       "id:double_xp",
       "id:gem_crate:25",
@@ -2523,7 +2529,7 @@
       "id:cat_tag:1",
       "id:clown_tag:2",
       "id:steve:75",
-      "id:coffee:75",
+      "id:coffee:40",
       "id:cookie:3",
       "id:legendary_scratch_card:90",
       "id:lucky_cheese",
@@ -2533,6 +2539,7 @@
       "id:multi_potion",
       "id:skyline_r34:85",
       "id:lucky_7:95",
+      "id:lamborghini:40",
       "id:reroll_token:20"
     ]
   },
@@ -2700,5 +2707,35 @@
       "time": 259200,
       "ingredients": ["eye_of_ender:12"]
     }
+  },
+  "mini_cooper": {
+    "id": "mini_cooper",
+    "name": "mini cooper",
+    "plural": "minis",
+    "article": "a",
+    "emoji": "<:nypsi_mini:1206639656431657030>",
+    "longDesc": "mr bean",
+    "rarity": 1,
+    "role": "car",
+    "speed": 2,
+    "aliases": ["mini"],
+    "buy": 0,
+    "sell": 17500,
+    "in_crates": true
+  },
+  "lamborghini": {
+    "id": "lamborghini",
+    "name": "lamborghini aventador",
+    "plural": "lamborghinis",
+    "article": "a",
+    "emoji": "<:nypsi_lambo:1207439589011357796>",
+    "longDesc": "NYYOOWWMMMMM",
+    "rarity": 5,
+    "role": "car",
+    "speed": 7,
+    "aliases": ["lambo", "aventador"],
+    "buy": 0,
+    "sell": 100000,
+    "in_crates": false
   }
 }

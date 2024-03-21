@@ -16,6 +16,7 @@ import { addProgress } from "../utils/functions/economy/achievements.js";
 import { getBalance, updateBalance } from "../utils/functions/economy/balance.js";
 import { getInventory, setInventoryItem } from "../utils/functions/economy/inventory.js";
 import { createGame } from "../utils/functions/economy/stats.js";
+import { addTaskProgress } from "../utils/functions/economy/tasks";
 import { createUser, userExists } from "../utils/functions/economy/utils.js";
 import {
   addToNypsiBank,
@@ -161,6 +162,7 @@ async function run(message: Message | (NypsiCommandInteraction & CommandInteract
       await Promise.all([
         updateBalance(message.member, (await getBalance(message.member)) + stolen),
         addProgress(message.author.id, "robber", 1),
+        addTaskProgress(message.author.id, "thief"),
       ]);
 
       await removeFromNypsiBankBalance(stolen);
@@ -252,8 +254,11 @@ async function run(message: Message | (NypsiCommandInteraction & CommandInteract
   const pageManager: any = async () => {
     const res = await msg
       .awaitMessageComponent({ filter, time: 60_000 })
-      .then(async (i) => {
-        await i.deferUpdate();
+      .then((i) => {
+        setTimeout(() => {
+          if (!i.replied) i.deferUpdate().catch(() => {});
+        }, 2000);
+
         return i;
       })
       .catch(() => {});
@@ -266,9 +271,14 @@ async function run(message: Message | (NypsiCommandInteraction & CommandInteract
     if (res.customId == "ro") {
       const newEmbed = await robBank("nypsi");
 
-      if (!newEmbed) return await res.message.edit({ components: [] });
+      if (!newEmbed)
+        return await res
+          .update({ components: [] })
+          .catch(() => res.message.edit({ components: [] }));
 
-      await res.message.edit({ embeds: [newEmbed], components: [] });
+      await res
+        .update({ embeds: [newEmbed], components: [] })
+        .then(() => res.message.edit({ embeds: [newEmbed], components: [] }));
       return;
     }
   };

@@ -1,4 +1,4 @@
-import { variants } from "@catppuccin/palette";
+import { flavors } from "@catppuccin/palette";
 import { Image, ImageSuggestion, ImageType } from "@prisma/client";
 import { ClusterManager } from "discord-hybrid-sharding";
 import { ColorResolvable, User, WebhookClient } from "discord.js";
@@ -55,7 +55,7 @@ export async function suggestImage(
   });
 
   const embed = new CustomEmbed()
-    .setColor(variants.latte.base.hex as ColorResolvable)
+    .setColor(flavors.latte.colors.base.hex as ColorResolvable)
     .setTitle("image suggestion #" + id);
 
   const username = await getLastKnownUsername(submitterId);
@@ -98,7 +98,8 @@ export async function getRandomImage(type: ImageType) {
 
   const chosen = images[Math.floor(Math.random() * images.length)];
 
-  prisma.image.update({
+  // doesnt work if not awaited !?!?!??!!?
+  await prisma.image.update({
     where: { id: chosen.id },
     data: { views: { increment: 1 } },
   });

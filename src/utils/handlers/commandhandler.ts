@@ -5,6 +5,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
   CommandInteraction,
+  Embed,
   GuildMember,
   Interaction,
   Message,
@@ -29,7 +30,10 @@ import { Item } from "../../types/Economy";
 import Constants from "../Constants";
 import { a } from "../functions/anticheat";
 import { addProgress, setProgress } from "../functions/economy/achievements";
+import { addBooster } from "../functions/economy/boosters";
 import { commandGemCheck, gemBreak, getInventory } from "../functions/economy/inventory";
+import { getRawLevel } from "../functions/economy/levelling";
+import { addTaskProgress } from "../functions/economy/tasks";
 import {
   createUser,
   getEcoBanTime,
@@ -49,7 +53,11 @@ import { percentChance } from "../functions/random";
 import { cleanString } from "../functions/string";
 import { isUserBlacklisted } from "../functions/users/blacklist";
 import { getLastCommand, updateUser } from "../functions/users/commands";
-import { getPreferences } from "../functions/users/notifications";
+import {
+  addInlineNotification,
+  getInlineNotifications,
+  getPreferences,
+} from "../functions/users/notifications";
 import { getLastKnownUsername } from "../functions/users/tag";
 import { createProfile, hasProfile } from "../functions/users/utils";
 import dayjs = require("dayjs");
@@ -791,6 +799,8 @@ export async function runCommand(
   }
 
   if (command.category == "money" || ["wholesome", "wordle", "sex"].includes(command.name)) {
+    if (!(await userExists(message.member))) await createUser(message.member);
+
     if (
       restarting ||
       (await redis.get(
@@ -941,7 +951,33 @@ export async function runCommand(
   }
 
   setTimeout(async () => {
+    if (command.category === "money") {
+      if (!(await redis.exists(`nypsi:inactiveuserthing:${message.author.id}`))) {
+        await redis.set(`nypsi:inactiveuserthing:${message.author.id}`, "boobies", "EX", 2.628e6);
+        const lastCommand = await getLastCommand(message.author.id);
+        const rawLevel = await getRawLevel(message.author.id);
+
+        if (
+          dayjs(lastCommand).isBefore(dayjs().subtract(3, "months")) &&
+          dayjs(lastCommand).isAfter(dayjs().subtract(5, "year")) &&
+          rawLevel > 100
+        ) {
+          await addBooster(message.author.id, "xp_booster", 2, dayjs().add(1, "day").toDate());
+
+          await addInlineNotification({
+            memberId: message.author.id,
+            embed: new CustomEmbed(
+              message.member,
+              "**welcome back!!**\n\nwelcome back to nypsi, since it's been a while, we've given you a 24 hour 40% xp booster. enjoy!",
+            ),
+          });
+        }
+      }
+    }
+
     const news = await getNews();
+
+    const embeds: (Embed | CustomEmbed | APIEmbed)[] = [];
 
     if (news.text != "" && command.category == "money" && !(await hasSeenNews(message.author.id))) {
       await redis.rpush(Constants.redis.nypsi.NEWS_SEEN, message.author.id);
@@ -952,13 +988,14 @@ export async function runCommand(
         .setHeader("news", message.author.avatarURL())
         .setFooter({ text: `you are #${pos} to see this` });
 
-      if (message instanceof Message) {
-        message.reply({ embeds: [embed] });
-      } else {
-        message.followUp({ embeds: [embed], ephemeral: true });
-      }
+      embeds.push(embed);
+
       logger.info(`news shown to ${message.author.username}`);
     }
+
+    const notifs = await getInlineNotifications(message.author.id);
+
+    if (notifs.length > 0) embeds.push(...notifs.map((i) => i.embed));
 
     if (await redis.exists(`achievements:completed:${message.author.id}`)) {
       if (!(await userExists(message.member))) await createUser(message.member);
@@ -970,7 +1007,11 @@ export async function runCommand(
       if (message instanceof Message) {
         message.reply({ embeds: [embed] });
       } else {
-        message.followUp({ embeds: [embed] });
+        message.followUp({ embeds: [embed] }).catch(() => {
+          setTimeout(() => {
+            message.followUp({ embeds: [embed] }).catch(() => {});
+          }, 2500);
+        });
       }
     }
 
@@ -990,13 +1031,21 @@ export async function runCommand(
     if (await redis.exists(`nypsi:levelup:${message.author.id}`)) {
       const embed: APIEmbed = JSON.parse(await redis.get(`nypsi:levelup:${message.author.id}`));
 
-      if (message instanceof Message) {
-        message.reply({ embeds: [embed] });
-      } else {
-        message.followUp({ embeds: [embed], ephemeral: true });
-      }
+      embeds.push(embed);
 
       await redis.del(`nypsi:levelup:${message.author.id}`);
+    }
+
+    if (embeds.length > 0) {
+      if (message instanceof Message) {
+        message.reply({ embeds });
+      } else {
+        message.followUp({ embeds: embeds, ephemeral: true }).catch(() => {
+          setTimeout(() => {
+            message.followUp({ embeds: embeds, ephemeral: true }).catch(() => {});
+          }, 2500);
+        });
+      }
     }
   }, 2000);
 
@@ -1006,6 +1055,8 @@ export async function runCommand(
     updateUser(message.author || message.author || null, command.name),
     redis.hincrby(Constants.redis.nypsi.TOP_COMMANDS, command.name, 1),
     addProgress(message.author.id, "nypsi", 1),
+    addTaskProgress(message.author.id, "commands_weekly"),
+    addTaskProgress(message.author.id, "commands_daily"),
     commandGemCheck(message.member, command.category),
     redis.hincrby(Constants.redis.nypsi.TOP_COMMANDS_USER, message.author.id, 1),
   ]);

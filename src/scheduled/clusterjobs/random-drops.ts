@@ -15,6 +15,7 @@ import { findChannelCluster } from "../../utils/functions/clusters";
 import { MStoTime } from "../../utils/functions/date";
 import { addProgress } from "../../utils/functions/economy/achievements";
 import { addInventoryItem } from "../../utils/functions/economy/inventory";
+import { addTaskProgress } from "../../utils/functions/economy/tasks";
 import { createUser, getItems, isEcoBanned, userExists } from "../../utils/functions/economy/utils";
 import { getPrefix } from "../../utils/functions/guilds/utils";
 import { percentChance, shuffle } from "../../utils/functions/random";
@@ -25,6 +26,7 @@ import { logger } from "../../utils/logger";
 import dayjs = require("dayjs");
 
 const max = 3;
+const cooldownSeconds = 1800;
 const activityWithinSeconds = 30;
 const activeUsersRequired = 2;
 const words = [
@@ -40,7 +42,7 @@ const words = [
 ];
 
 function doRandomDrop(client: NypsiClient) {
-  const rand = Math.floor(Math.random() * ms("45 minutes") + ms("15 minutes"));
+  const rand = Math.floor(Math.random() * ms("30 minutes") + ms("15 minutes"));
   setTimeout(() => {
     randomDrop(client);
     doRandomDrop(client);
@@ -94,7 +96,7 @@ async function randomDrop(client: NypsiClient) {
 
     count++;
 
-    await redis.set(`nypsi:lootdrop:channel:cd:${channelId}`, "69", "EX", 3600);
+    await redis.set(`nypsi:lootdrop:channel:cd:${channelId}`, "69", "EX", cooldownSeconds);
 
     const items = Array.from(Object.values(getItems()))
       .filter((i) => i.random_drop_chance && percentChance(i.random_drop_chance))
@@ -121,6 +123,7 @@ async function randomDrop(client: NypsiClient) {
       );
 
       addProgress(winner, "lootdrops_pro", 1);
+      addTaskProgress(winner, "lootdrops");
 
       if (prize.startsWith("item:")) {
         let amount = 1;
@@ -532,6 +535,7 @@ export async function startRandomDrop(client: NypsiClient, channelId: string) {
     );
 
     addProgress(winner, "lootdrops_pro", 1);
+    addTaskProgress(winner, "lootdrops");
 
     if (prize.startsWith("item:")) {
       let amount = 1;

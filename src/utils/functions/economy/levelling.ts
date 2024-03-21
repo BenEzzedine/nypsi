@@ -12,6 +12,7 @@ import { getBalance, getBankBalance, updateBalance, updateBankBalance } from "./
 import { addBooster, getBoosters } from "./boosters";
 import { addInventoryItem } from "./inventory";
 import { addStat } from "./stats";
+import { addTaskProgress } from "./tasks";
 import { getXp, updateXp } from "./xp";
 import ms = require("ms");
 import dayjs = require("dayjs");
@@ -59,9 +60,7 @@ levellingRewards.set(25, {
 });
 levellingRewards.set(30, { text: "you will now receive 4 📦 vote crates when voting" });
 levellingRewards.set(40, {
-  text:
-    "you will now receive 4 📦 vote crates when voting\n\nyou have unlocked:\n" +
-    "- 🍟 mcdonalds (</workers view:1014905682341924945>)",
+  text: "you have unlocked:\n" + "- 🍟 mcdonalds (</workers view:1014905682341924945>)",
 });
 levellingRewards.set(50, {
   text:
@@ -217,7 +216,7 @@ export async function getLevel(member: GuildMember | string): Promise<number> {
   });
 
   await redis.set(`${Constants.redis.cache.economy.LEVEL}:${id}`, query.level);
-  await redis.expire(`${Constants.redis.cache.economy.LEVEL}:${id}`, ms("1 hour") / 1000);
+  await redis.expire(`${Constants.redis.cache.economy.LEVEL}:${id}`, ms("12 hours") / 1000);
 
   return query.level;
 }
@@ -427,7 +426,7 @@ async function doLevelUp(
       };
     }
 
-    if (level % 150 === 0) {
+    if (rawLevel % 200 === 0) {
       await addInventoryItem(member, "nypsi_crate", 1);
 
       if (levelData?.text) {
@@ -439,7 +438,7 @@ async function doLevelUp(
       }
     }
 
-    if (level % 69 === 0) {
+    if (rawLevel % 69 === 0) {
       await addInventoryItem(member, "69420_crate", 5);
 
       if (levelData?.text) {
@@ -451,19 +450,19 @@ async function doLevelUp(
       }
     }
 
-    if (level % 500 === 0) {
-      await addInventoryItem(member, "bronze_credit", 2);
+    if (rawLevel % 750 === 0) {
+      await addInventoryItem(member, "bronze_credit", 1);
 
       if (levelData?.text) {
-        levelData.text += "\n- `2x` <:nypsi_bronze:1108083689478443058> bronze credit";
+        levelData.text += "\n- `1x` <:nypsi_bronze:1108083689478443058> bronze credit";
       } else {
         levelData = {
-          text: "you have received:\n" + "- `2x` <:nypsi_bronze:1108083689478443058> bronze credit",
+          text: "you have received:\n" + "- `1x` <:nypsi_bronze:1108083689478443058> bronze credit",
         };
       }
     }
 
-    if (level % 1000 === 0) {
+    if (rawLevel % 1500 === 0) {
       await addInventoryItem(member, "omega_crate", 1);
 
       if (levelData?.text) {
@@ -475,7 +474,7 @@ async function doLevelUp(
       }
     }
 
-    if (level % 50 === 0) {
+    if (rawLevel % 50 === 0) {
       const boosters = await getBoosters(member);
 
       if (!boosters.has("xp_booster")) {
@@ -525,6 +524,8 @@ async function doLevelUp(
       await redis.set(`nypsi:levelup:${id}`, JSON.stringify(embed.toJSON()));
       break;
   }
+
+  addTaskProgress(id, "levelup_weekly");
 
   await sleep(69);
 

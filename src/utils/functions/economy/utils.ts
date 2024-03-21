@@ -13,6 +13,7 @@ import {
   UserUpgrade,
 } from "../../../types/Economy";
 import { Tag } from "../../../types/Tags";
+import { Task } from "../../../types/Tasks";
 import { Worker, WorkerUpgrades } from "../../../types/Workers";
 import Constants from "../../Constants";
 import { logger } from "../../logger";
@@ -25,6 +26,7 @@ import { calcMaxBet, getBalance, updateBalance } from "./balance";
 import { getGuildByUser } from "./guilds";
 import { addInventoryItem } from "./inventory";
 import { addStat } from "./stats";
+import { addTaskProgress } from "./tasks";
 import { getXp, updateXp } from "./xp";
 import ms = require("ms");
 import math = require("mathjs");
@@ -37,6 +39,7 @@ let bakeryUpgrades: { [key: string]: BakeryUpgradeData };
 let guildUpgrades: { [key: string]: GuildUpgrade };
 let userUpgrades: { [key: string]: UserUpgrade };
 let tags: { [key: string]: Tag };
+let tasks: { [key: string]: Task };
 
 const lotteryTicketPrice = 50000;
 /**
@@ -48,6 +51,7 @@ export { lotteryTicketPrice };
 export let maxPrestige = 0;
 
 export function loadItems(crypto = true) {
+  maxPrestige = 0;
   const itemsFile: any = fs.readFileSync("./data/items.json");
   const achievementsFile: any = fs.readFileSync("./data/achievements.json");
   const workersFile: any = fs.readFileSync("./data/workers.json");
@@ -55,6 +59,7 @@ export function loadItems(crypto = true) {
   const guildUpgradesFile: any = fs.readFileSync("./data/guild_upgrades.json");
   const tagsFile: any = fs.readFileSync("./data/tags.json");
   const userUpgradesFile: any = fs.readFileSync("./data/upgrades.json");
+  const tasksFile: any = fs.readFileSync("./data/tasks.json");
 
   items = JSON.parse(itemsFile);
   achievements = JSON.parse(achievementsFile);
@@ -64,6 +69,7 @@ export function loadItems(crypto = true) {
   guildUpgrades = JSON.parse(guildUpgradesFile);
   tags = JSON.parse(tagsFile);
   userUpgrades = JSON.parse(userUpgradesFile);
+  tasks = JSON.parse(tasksFile);
 
   Object.values(userUpgrades).forEach((i) => {
     maxPrestige += i.max;
@@ -88,6 +94,7 @@ export function loadItems(crypto = true) {
   logger.info(`${Object.keys(achievements).length.toLocaleString()} achievements loaded`);
   logger.info(`${Object.keys(tags).length} tags loaded`);
   logger.info(`${Object.keys(userUpgrades).length} user upgrades loaded`);
+  logger.info(`${Object.keys(tasks).length} tasks loaded`);
   logger.info(`max prestige set at P${maxPrestige}`);
 
   if (crypto) {
@@ -162,10 +169,10 @@ export async function userExists(member: GuildMember | string): Promise<boolean>
 
   if (!id) return;
 
-  if (await redis.exists(`${Constants.redis.cache.economy.EXISTS}:${id}`)) {
-    return (await redis.get(`${Constants.redis.cache.economy.EXISTS}:${id}`)) === "true"
-      ? true
-      : false;
+  const cache = await redis.get(`${Constants.redis.cache.economy.EXISTS}:${id}`);
+
+  if (cache) {
+    return cache === "true" ? true : false;
   }
 
   const query = await prisma.economy.findUnique({
@@ -179,11 +186,11 @@ export async function userExists(member: GuildMember | string): Promise<boolean>
 
   if (query) {
     await redis.set(`${Constants.redis.cache.economy.EXISTS}:${id}`, "true");
-    await redis.expire(`${Constants.redis.cache.economy.EXISTS}:${id}`, ms("12 hour") / 1000);
+    await redis.expire(`${Constants.redis.cache.economy.EXISTS}:${id}`, ms("7 day") / 1000);
     return true;
   } else {
     await redis.set(`${Constants.redis.cache.economy.EXISTS}:${id}`, "false");
-    await redis.expire(`${Constants.redis.cache.economy.EXISTS}:${id}`, ms("12 hour") / 1000);
+    await redis.expire(`${Constants.redis.cache.economy.EXISTS}:${id}`, ms("7 day") / 1000);
     return false;
   }
 }
@@ -397,11 +404,7 @@ export async function reset() {
   const deleted = await prisma.economy
     .deleteMany({
       where: {
-        AND: [
-          { prestige: 0 },
-          { lastVote: { lt: new Date(Date.now() - ms("12 hours")) } },
-          { dailyStreak: { lt: 2 } },
-        ],
+        AND: [{ prestige: 0 }, { dailyStreak: 0 }, { level: 0 }],
       },
     })
     .then((r) => r.count);
@@ -473,6 +476,10 @@ export function getBakeryUpgradesData() {
 
 export function getAchievements() {
   return achievements;
+}
+
+export function getTasksData() {
+  return tasks;
 }
 
 export async function deleteUser(member: GuildMember | string) {
@@ -696,6 +703,7 @@ export async function doDaily(member: GuildMember) {
   }
 
   await setProgress(member.id, "streaker", streak);
+  addTaskProgress(member.id, "daily_streaks");
 
   return embed;
 }

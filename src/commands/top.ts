@@ -9,6 +9,7 @@ import {
   Message,
   MessageActionRowComponentBuilder,
 } from "discord.js";
+import redis from "../init/redis";
 import { Command, NypsiCommandInteraction } from "../models/Command";
 import { CustomEmbed, ErrorEmbed } from "../models/EmbedBuilders.js";
 import { Item } from "../types/Economy.js";
@@ -238,6 +239,15 @@ async function run(
       new ButtonBuilder().setCustomId("➡").setLabel("next").setStyle(ButtonStyle.Primary),
     );
 
+    if (
+      pos === 1 &&
+      message instanceof Message &&
+      !(await redis.exists(`nypsi:cd:topemoji:${message.channelId}`))
+    ) {
+      await redis.set(`nypsi:cd:topemoji:${message.channelId}`, "boobies", "EX", 3);
+      message.react("👑");
+    }
+
     if (pages.size <= 1) {
       return send({ embeds: [embed] });
     }
@@ -281,7 +291,7 @@ async function run(
       data.pages,
       data.pos,
       `top prestige ${global ? "[global]" : `for ${message.guild.name}`}`,
-      global ? "https://nypsi.xyz/leaderboard/prestige" : null,
+      global ? "https://nypsi.xyz/leaderboard?lb=level" : null,
     );
   } else if (args[0].toLowerCase() == "item") {
     const items = getItems();
@@ -349,14 +359,14 @@ async function run(
       data.pages,
       data.pos,
       `top net worth ${global ? "[global]" : `for ${message.guild.name}`}`,
-      global ? "https://nypsi.xyz/leaderboard/networth" : null,
+      global ? "https://nypsi.xyz/leaderboard?lb=net%2520worth" : null,
     );
   } else if (args[0].toLowerCase().includes("guild")) {
     const userGuild = await getGuildByUser(message.member);
 
     const data = await topGuilds(userGuild?.guildName);
 
-    return show(data.pages, data.pos, "top guilds");
+    return show(data.pages, data.pos, "top guilds", "https://nypsi.xyz/leaderboard?lb=guilds");
   } else if (args[0].toLowerCase().includes("streak")) {
     let global = false;
 
@@ -374,7 +384,7 @@ async function run(
       data.pages,
       data.pos,
       `top daily streak ${global ? "[global]" : `for ${message.guild.name}`}`,
-      global ? "https://nypsi.xyz/leaderboard/streak" : null,
+      global ? "https://nypsi.xyz/leaderboard?lb=streak" : null,
     );
   } else if (args[0].toLowerCase().includes("lott")) {
     let global = false;
@@ -411,7 +421,7 @@ async function run(
       data.pages,
       data.pos,
       `top wordle wins ${global ? "[global]" : `for ${message.guild.name}`}`,
-      global ? "https://nypsi.xyz/leaderboard/wordle" : null,
+      global ? "https://nypsi.xyz/leaderboard?lb=wordle" : null,
     );
   } else if (args[0].toLowerCase().includes("vote")) {
     let global = false;
@@ -430,7 +440,7 @@ async function run(
       data.pages,
       data.pos,
       `top votes ${global ? "[global]" : `for ${message.guild.name}`}`,
-      global ? "https://nypsi.xyz/leaderboard/vote" : null,
+      global ? "https://nypsi.xyz/leaderboard?lb=vote" : null,
     );
   } else if (args[0].toLowerCase() === "cmd" || args[0].toLowerCase() === "command") {
     let data: { pages: Map<number, string[]>; pos: number };
